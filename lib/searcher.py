@@ -5,7 +5,7 @@ import json
 
 def make_json(series: dict) -> None:
     with open('series.json', 'w') as f:
-        json.dump(series, f, indent=4, ensure_ascii=True)
+        json.dump(series, f, indent=4, ensure_ascii=False)
 
 def get_page(url:str) -> BeautifulSoup:
     return BeautifulSoup(get(url).content, 'html.parser')
@@ -51,14 +51,14 @@ def scrape_series_info(page: BeautifulSoup) -> dict:
         'date_published': date_published,
     }
 
-def scrapes_series_chapter(page: BeautifulSoup) -> dict:
+def scrapes_series_chapter(page: BeautifulSoup) -> str:
     chapter = page.find('div', {'class':'epcontent entry-content'})
     ps = chapter.find_all('p')
     chapter = ''
     for p in ps:
         chapter += p.text.strip() + '\n'
 
-    return {'chapter':chapter}
+    return chapter
 
 def main_handler(url:str):
     page = get_page_soup(url)
@@ -70,6 +70,12 @@ def main_handler(url:str):
     for url in urls:
         print(f'Crawling: {url}')
         series_info = scrape_series_info(get_page_soup(url))
-        series_info['chapters'] = scrapes_series_chapter(get_page_soup(url))
+        series_info['chapter'] = scrapes_series_chapter(get_page_soup(url))
         series[url] = series_info
     make_json(series)
+
+if __name__ == "__main__":
+    url = 'https://centralnovel.com/the-beginning-after-the-end-capitulo-0/'
+    series_info = scrape_series_info(get_page_soup(url))
+    series_info['chapters'] = scrapes_series_chapter(get_page_soup(url))
+    make_json(series_info)
